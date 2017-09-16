@@ -7,7 +7,14 @@ import optparse
 import subprocess
 import numpy as np
 import random
-from sumolib import checkBinary
+
+try:
+    sys.path.append(os.path.join(os.environ.get("SUMO_HOME"), "tools"))
+    from sumolib import checkBinary  # noqa
+except ImportError:
+   sys.exit(
+       "please declare environment variable 'SUMO_HOME' as the root directory of your sumo installation (it should contain folders 'bin', 'tools' and 'docs')")
+
 import traci
 import gym
 from gym import spaces
@@ -16,10 +23,10 @@ from gym import spaces
 class Junction(gym.Env):
 
     def __init__(self):
-        self.initTraci()
+        self.initSimulation()
 
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(0, 3600, (1, ))
+        self.observation_space = spaces.Box(np.array([0]), np.array([3600]))
 
     def _seed(self, seed=None):
         pass
@@ -28,9 +35,9 @@ class Junction(gym.Env):
         traci.trafficlights.setPhase("0", action)
         traci.simulationStep()
 
-        observation = np.array(traci.vehicle.getIDCount())
+        observation = np.array([traci.vehicle.getIDCount()])
 
-        reward = 5
+        reward = -1 * traci.vehicle.getIDCount()
 
         done = traci.simulation.getMinExpectedNumber() == 0
         done = bool(done)
@@ -41,7 +48,10 @@ class Junction(gym.Env):
 
     def _reset(self):
         traci.close()
-        self.initTraci()
+        self.initSimulation()
+
+        observation = np.array([traci.vehicle.getIDCount()])
+        return observation
 
     def _render(self, mode='human', close=False):
         pass
@@ -49,10 +59,10 @@ class Junction(gym.Env):
     def _close(self):
         traci.close()
 
-    def initTraci(self):
+    def initSimulation(self):
         sumoBinary = checkBinary('sumo')
-        self.generate_routefile(self)
-        traci.start([sumoBinary, "-c", "data/cross.sumocfg"])
+        self.generate_routefile()
+        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg")])
         traci.trafficlights.setPhase("0", 2)
 
     def generate_routefile(self):
@@ -62,7 +72,7 @@ class Junction(gym.Env):
         pWE = 1. / 10
         pEW = 1. / 11
         pNS = 1. / 30
-        with open("data/cross.rou.xml", "w") as routes:
+        with open(os.path.join(os.path.dirname(__file__), "data/cross.rou.xml"), "w") as routes:
             print("""<routes>
             <vType id="typeWE" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="16.67" guiShape="passenger"/>
             <vType id="typeNS" accel="0.8" decel="4.5" sigma="0.5" length="7" minGap="3" maxSpeed="25" guiShape="bus"/>

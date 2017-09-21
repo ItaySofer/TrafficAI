@@ -22,9 +22,9 @@ from gym import spaces
 
 class Junction(gym.Env):
 
-    def __init__(self):
-        self.initSimulation()
-
+    def __init__(self, visualize=False):
+        self.firstRun = True
+        self.visualize = visualize
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(np.array([0]), np.array([3600]))
 
@@ -47,7 +47,10 @@ class Junction(gym.Env):
         return observation, reward, done, info
 
     def _reset(self):
-        traci.close()
+        if not self.firstRun:
+            traci.close()
+        else:
+            self.firstRun = False
         self.initSimulation()
 
         observation = np.array([traci.vehicle.getIDCount()])
@@ -60,9 +63,12 @@ class Junction(gym.Env):
         traci.close()
 
     def initSimulation(self):
-        sumoBinary = checkBinary('sumo')
         self.generate_routefile()
-        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg")])
+        if self.visualize:
+            sumoBinary = checkBinary('sumo-gui')
+        else:
+            sumoBinary = checkBinary('sumo')
+        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg"), "--start", "--quit-on-end"])
         traci.trafficlights.setPhase("0", 2)
 
     def generate_routefile(self):

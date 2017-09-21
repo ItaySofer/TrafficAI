@@ -13,7 +13,7 @@ from env.Junction import Junction
 
 
 # Get the environment and extract the number of actions.
-env = Junction()
+env = Junction(visualize=True)
 # np.random.seed(123)
 # env.seed(123)
 nb_actions = env.action_space.n

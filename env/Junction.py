@@ -21,10 +21,14 @@ from gym import spaces
 
 
 class Junction(gym.Env):
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second': 50
+    }
 
-    def __init__(self, visualize=False):
-        self.firstRun = True
-        self.visualize = visualize
+    def __init__(self):
+        self.__firstRun = True
+        self.__visualize = False
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(np.array([0]), np.array([3600]))
 
@@ -47,11 +51,11 @@ class Junction(gym.Env):
         return observation, reward, done, info
 
     def _reset(self):
-        if not self.firstRun:
+        if not self.__firstRun:
             traci.close()
         else:
-            self.firstRun = False
-        self.initSimulation()
+            self.__firstRun = False
+        self.__initSimulation()
 
         observation = np.array([traci.vehicle.getIDCount()])
         return observation
@@ -62,16 +66,16 @@ class Junction(gym.Env):
     def _close(self):
         traci.close()
 
-    def initSimulation(self):
-        self.generate_routefile()
-        if self.visualize:
+    def __initSimulation(self):
+        self.__generateRoutefile()
+        if self.__visualize:
             sumoBinary = checkBinary('sumo-gui')
         else:
             sumoBinary = checkBinary('sumo')
         traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg"), "--start", "--quit-on-end"])
         traci.trafficlights.setPhase("0", 2)
 
-    def generate_routefile(self):
+    def __generateRoutefile(self):
         random.seed(42)  # make tests reproducible
         N = 3600  # number of time steps
         # demand per second from different directions
@@ -105,3 +109,6 @@ class Junction(gym.Env):
                     vehNr += 1
                     lastVeh = i
             print("</routes>", file=routes)
+
+    def setVisualization(self, visualize):
+        self.__visualize = visualize

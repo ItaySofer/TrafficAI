@@ -27,7 +27,6 @@ class Junction(gym.Env):
         self.__leftTLightPos = centerCoord
         self.__upTLightPos = tuple(np.subtract(centerCoord, (1, 0)))
         self.__rightTLightPos = tuple(np.subtract(centerCoord, (1, 1)))
-        self.__maxSpeed = 16.67
 
         self.action_space = spaces.Discrete(self.__numOfTLightConfig)
         self.observation_space = spaces.Box(0, 1.0, self.__observationShape)
@@ -121,6 +120,7 @@ class Junction(gym.Env):
         delay = 0
         vehiclesNames = traci.vehicle.getIDList()
         for vehicle in vehiclesNames:
-            delay += (self.__maxSpeed - traci.vehicle.getSpeed(vehicle)) / self.__maxSpeed
+            vMaxSpeed = traci.vehicle.getMaxSpeed(vehicle)
+            delay += (vMaxSpeed - traci.vehicle.getSpeed(vehicle)) / vMaxSpeed
         return delay
 

@@ -1,16 +1,13 @@
-import numpy as np
-
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten, Permute, Convolution2D
-from keras.optimizers import Adam
 import keras.backend as K
-
+import numpy as np
+from keras.layers import Dense, Activation, Flatten, Permute, Convolution2D
+from keras.models import Sequential
+from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
-from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
 from rl.memory import SequentialMemory
+from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
 
-from env.Junction import Junction
-
+from DQN.env.Junction import Junction
 
 # Get the environment and extract the number of actions.
 env = Junction()
@@ -82,7 +79,7 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=0.00025), metrics=['mae'])
 
-weights_filename = 'dqn_{}_weights.h5f'.format('TrafficAI')
+weights_filename = 'DQN\dqn_{}_weights.h5f'.format('TrafficAI')
 
 # Train
 env.setVisualization(False)

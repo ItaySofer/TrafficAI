@@ -1,24 +1,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import os
-import sys
-import optparse
-import subprocess
 import numpy as np
-import random
-
-try:
-    sys.path.append(os.path.join(os.environ.get("SUMO_HOME"), "tools"))
-    from sumolib import checkBinary  # noqa
-except ImportError:
-   sys.exit(
-       "please declare environment variable 'SUMO_HOME' as the root directory of your sumo installation (it should contain folders 'bin', 'tools' and 'docs')")
-
 import traci
 import gym
 from gym import spaces
-from gym.utils import seeding
+import Utils
 
 
 class Junction(gym.Env):
@@ -46,8 +33,11 @@ class Junction(gym.Env):
         self.observation_space = spaces.Box(0, 1.0, self.__observationShape)
 
     def _seed(self, seed=None):
-        self.npRandom, seed = seeding.np_random(seed)
-        return [seed]
+        if seed is None:
+            self.__seed = 123
+        else:
+            self.__seed = seed
+        return [self.__seed]
 
     def _step(self, action):
         self.__tLightSwitched = (traci.trafficlights.getRedYellowGreenState("0") == "GrGr" and action == 1) or (traci.trafficlights.getRedYellowGreenState("0") == "rGrG" and action == 0)
@@ -71,7 +61,8 @@ class Junction(gym.Env):
             traci.close()
         else:
             self.__firstRun = False
-        self.__initSimulation()
+
+        Utils.initSimulation(self.__visualize, self.__seed)
 
         self.__switches = 0
         observation = np.zeros(self.__observationShape)
@@ -83,50 +74,6 @@ class Junction(gym.Env):
 
     def _close(self):
         traci.close()
-
-    def __initSimulation(self):
-        self.__generateRoutefile()
-        if self.__visualize:
-            sumoBinary = checkBinary('sumo-gui')
-        else:
-            sumoBinary = checkBinary('sumo')
-        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg"), "--start", "--quit-on-end", "--duration-log.statistics"])
-        traci.trafficlights.setPhase("0", self.__numOfTLightConfig - 1)
-
-    def __generateRoutefile(self):
-        N = 3600  # number of time steps
-        # demand per second from different directions
-        pWE = 1. / 10
-        pEW = 1. / 10
-        pNS = 1. / 10
-        pSN = 1. / 10
-        with open(os.path.join(os.path.dirname(__file__), "data/cross.rou.xml"), "w") as routes:
-            print("""<routes>
-            <vType id="typeWE" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed=\"""" + str(self.__maxSpeed) + """\" guiShape="passenger"/>
-
-            <route id="right" edges="51o 1i 2o 52i" />
-            <route id="left" edges="52o 2i 1o 51i" />
-            <route id="up" edges="53o 3i 4o 54i" />
-            <route id="down" edges="54o 4i 3o 53i" />""", file=routes)
-            vehNr = 0
-            for i in range(N):
-                if self.npRandom.uniform(low=-0., high=1.) < pWE:
-                    print('    <vehicle id="right_%i" type="typeWE" route="right" depart="%i" />' % (
-                        vehNr, i), file=routes)
-                    vehNr += 1
-                if self.npRandom.uniform(low=-0., high=1.) < pEW:
-                    print('    <vehicle id="left_%i" type="typeWE" route="left" depart="%i" />' % (
-                        vehNr, i), file=routes)
-                    vehNr += 1
-                if self.npRandom.uniform(low=-0., high=1.) < pNS:
-                    print('    <vehicle id="down_%i" type="typeWE" route="down" depart="%i" />' % (
-                        vehNr, i), file=routes)
-                    vehNr += 1
-                if self.npRandom.uniform(low=-0., high=1.) < pSN:
-                    print('    <vehicle id="up_%i" type="typeWE" route="up" depart="%i" />' % (
-                        vehNr, i), file=routes)
-                    vehNr += 1
-            print("</routes>", file=routes)
 
     def setVisualization(self, visualize):
         self.__visualize = visualize

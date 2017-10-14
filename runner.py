@@ -15,15 +15,16 @@ from env.Junction import Junction
 
 # Get the environment and extract the number of actions.
 env = Junction()
-# np.random.seed(123)
-# env.seed(123)
+np.random.seed(123)
+env.seed(123)
 nb_actions = env.action_space.n
 
 
-INPUT_SHAPE = (168, 168)
-WINDOW_LENGTH = 2
+# Build network architecture
+INPUT_SHAPE = (84, 84)
+WINDOW_LENGTH = 1
 
-# Nature architecture
+## Nature architecture ##
 # input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 # model = Sequential()
 # if K.image_dim_ordering() == 'tf':
@@ -47,7 +48,7 @@ WINDOW_LENGTH = 2
 # model.add(Activation('linear'))
 # print(model.summary())
 
-# NIPS architecture
+## NIPS architecture ##
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 model = Sequential()
 if K.image_dim_ordering() == 'tf':
@@ -69,26 +70,30 @@ model.add(Dense(nb_actions))
 model.add(Activation('linear'))
 print(model.summary())
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-# even the metrics!
-memory = SequentialMemory(limit=50000, window_length=WINDOW_LENGTH)
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
-                              nb_steps=50000)
+# Set replay memory
+memory = SequentialMemory(limit=10000, window_length=WINDOW_LENGTH)
 
+# Set policy
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
+                              nb_steps=10000)
+
+# Build and compile agent
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-               nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+               nb_steps_warmup=10000, gamma=.99, target_model_update=10000,
                train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=0.00025), metrics=['mae'])
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
+weights_filename = 'dqn_{}_weights.h5f'.format('TrafficAI')
+
+# Train
 env.setVisualization(False)
-dqn.fit(env, nb_steps=600000, verbose=2)
+dqn.fit(env, nb_steps=200000, verbose=2)
 
-# After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights.h5f'.format('TrafficAI'), overwrite=True)
+# Save final weights after training
+dqn.save_weights(weights_filename, overwrite=True)
 
-# Finally, evaluate our algorithm for 5 episodes.
+# Test
+dqn.load_weights(weights_filename)
+
 env.setVisualization(True)
 dqn.test(env, nb_episodes=5)

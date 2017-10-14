@@ -18,6 +18,7 @@ except ImportError:
 import traci
 import gym
 from gym import spaces
+from gym.utils import seeding
 
 
 class Junction(gym.Env):
@@ -31,7 +32,7 @@ class Junction(gym.Env):
         self.__firstRun = True
         self.__numOfTLightConfig = 2
         self.__roadLength = 510
-        self.__discretizationRes = 168
+        self.__discretizationRes = 84
         self.__observationShape = (self.__discretizationRes, self.__discretizationRes)
         self.__discretizationStep = self.__roadLength * 2 / self.__discretizationRes
         centerCoord = (int(self.__discretizationRes / 2), int(self.__discretizationRes / 2))
@@ -45,7 +46,8 @@ class Junction(gym.Env):
         self.observation_space = spaces.Box(0, 1.0, self.__observationShape)
 
     def _seed(self, seed=None):
-        pass
+        self.npRandom, seed = seeding.np_random(seed)
+        return [seed]
 
     def _step(self, action):
         self.__tLightSwitched = (traci.trafficlights.getRedYellowGreenState("0") == "GrGr" and action == 1) or (traci.trafficlights.getRedYellowGreenState("0") == "rGrG" and action == 0)
@@ -92,7 +94,6 @@ class Junction(gym.Env):
         traci.trafficlights.setPhase("0", self.__numOfTLightConfig - 1)
 
     def __generateRoutefile(self):
-        random.seed(42)  # make tests reproducible
         N = 3600  # number of time steps
         # demand per second from different directions
         pWE = 1. / 10
@@ -107,29 +108,24 @@ class Junction(gym.Env):
             <route id="left" edges="52o 2i 1o 51i" />
             <route id="up" edges="53o 3i 4o 54i" />
             <route id="down" edges="54o 4i 3o 53i" />""", file=routes)
-            lastVeh = 0
             vehNr = 0
             for i in range(N):
-                if random.uniform(0, 1) < pWE:
+                if self.npRandom.uniform(low=-0., high=1.) < pWE:
                     print('    <vehicle id="right_%i" type="typeWE" route="right" depart="%i" />' % (
                         vehNr, i), file=routes)
                     vehNr += 1
-                    lastVeh = i
-                if random.uniform(0, 1) < pEW:
+                if self.npRandom.uniform(low=-0., high=1.) < pEW:
                     print('    <vehicle id="left_%i" type="typeWE" route="left" depart="%i" />' % (
                         vehNr, i), file=routes)
                     vehNr += 1
-                    lastVeh = i
-                if random.uniform(0, 1) < pNS:
+                if self.npRandom.uniform(low=-0., high=1.) < pNS:
                     print('    <vehicle id="down_%i" type="typeWE" route="down" depart="%i" />' % (
                         vehNr, i), file=routes)
                     vehNr += 1
-                    lastVeh = i
-                if random.uniform(0, 1) < pSN:
+                if self.npRandom.uniform(low=-0., high=1.) < pSN:
                     print('    <vehicle id="up_%i" type="typeWE" route="up" depart="%i" />' % (
                         vehNr, i), file=routes)
                     vehNr += 1
-                    lastVeh = i
             print("</routes>", file=routes)
 
     def setVisualization(self, visualize):

@@ -90,7 +90,7 @@ class Junction(gym.Env):
             sumoBinary = checkBinary('sumo-gui')
         else:
             sumoBinary = checkBinary('sumo')
-        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg"), "--start", "--quit-on-end"])
+        traci.start([sumoBinary, "-c", os.path.join(os.path.dirname(__file__), "data/cross.sumocfg"), "--start", "--quit-on-end", "--duration-log.statistics"])
         traci.trafficlights.setPhase("0", self.__numOfTLightConfig - 1)
 
     def __generateRoutefile(self):

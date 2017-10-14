@@ -1,5 +1,4 @@
 import numpy as np
-import keras
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Permute, Convolution2D
@@ -88,7 +87,6 @@ weights_filename = 'dqn_{}_weights.h5f'.format('TrafficAI')
 # Train
 env.setVisualization(False)
 dqn.fit(env, nb_steps=200000, verbose=2)
-
 # Save final weights after training
 dqn.save_weights(weights_filename, overwrite=True)
 

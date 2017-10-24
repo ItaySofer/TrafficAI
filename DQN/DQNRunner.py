@@ -15,7 +15,6 @@ np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
 
-
 # Build network architecture
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 1
@@ -79,13 +78,14 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=0.001), metrics=['mae'])
 
-weights_filename = 'dqn_{}_weights.h5f'.format('TrafficAI')
+weights_filename = 'dqn_{}_weights_01_01_probs.h5f'.format(
+    'TrafficAI')  # change weights file name for second experiment or for new training (not to lose old weights)
 
-# Train
-env.setVisualization(False)
-dqn.fit(env, nb_steps=400000, verbose=2)
-# Save final weights after training
-dqn.save_weights(weights_filename, overwrite=True)
+# # Train (uncomment out for training)
+# env.setVisualization(False)
+# dqn.fit(env, nb_steps=400000, verbose=2)
+# # Save final weights after training
+# dqn.save_weights(weights_filename, overwrite=True)
 
 # Test
 dqn.load_weights(weights_filename)

@@ -12,11 +12,13 @@ def runNaive():
     traci.trafficlights.setPhase("0", phase)
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
-        if traci.trafficlights.getPhase("0") == 0:
-            thresh = 60
-        else:
-            thresh = 20
-        # thresh = 20
+
+        thresh = 20  # comment out for second experiment
+        # if traci.trafficlights.getPhase("0") == 0:  # uncomment for second experiment
+        #     thresh = 60
+        # else:
+        #     thresh = 20
+
         if step < thresh:
             step += 1
         else:

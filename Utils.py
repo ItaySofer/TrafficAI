@@ -30,8 +30,8 @@ def __generateRoutefile(seed):
     # demand per second from different directions
     pWE = 1. / 10
     pEW = 1. / 10
-    pNS = 1. / 10
-    pSN = 1. / 10
+    pNS = .3
+    pSN = .3
     with open(os.path.join(os.path.dirname(__file__), "data/cross.rou.xml"), "w") as routes:
         print("""<routes>
         <vType id="typeWE" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="16.67" guiShape="passenger"/>

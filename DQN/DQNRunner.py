@@ -67,28 +67,28 @@ model.add(Activation('linear'))
 print(model.summary())
 
 # Set replay memory
-memory = SequentialMemory(limit=10000, window_length=WINDOW_LENGTH)
+memory = SequentialMemory(limit=50000, window_length=WINDOW_LENGTH)
 
 # Set policy
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
-                              nb_steps=10000)
+                              nb_steps=50000)
 
 # Build and compile agent
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-               nb_steps_warmup=10000, gamma=.99, target_model_update=10000,
+               nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
                train_interval=4, delta_clip=1.)
-dqn.compile(Adam(lr=0.00025), metrics=['mae'])
+dqn.compile(Adam(lr=0.001), metrics=['mae'])
 
-weights_filename = 'DQN\dqn_{}_weights.h5f'.format('TrafficAI')
+weights_filename = 'dqn_{}_weights.h5f'.format('TrafficAI')
 
 # Train
 env.setVisualization(False)
-dqn.fit(env, nb_steps=200000, verbose=2)
+dqn.fit(env, nb_steps=400000, verbose=2)
 # Save final weights after training
 dqn.save_weights(weights_filename, overwrite=True)
 
 # Test
 dqn.load_weights(weights_filename)
 
-env.setVisualization(True)
+env.setVisualization(False)
 dqn.test(env, nb_episodes=5)
